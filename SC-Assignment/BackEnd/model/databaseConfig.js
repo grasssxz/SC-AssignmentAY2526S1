@@ -9,7 +9,7 @@ var dbconnect = {
       host: 'localhost',
       port: 3306,
       user: 'root',
-      password: 'root',
+      password: '1G9r5a6c1E**',
       database: 'store',
     });
 

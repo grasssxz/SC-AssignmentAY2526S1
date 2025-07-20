@@ -169,7 +169,8 @@ app.post('/user/login', function (req, res) {
             res.setHeader('Content-Type', 'application/json');
             delete result[0]['password'];//clear the password in json data, do not send back to client
             console.log(result[0].username + " logged in");
-            res.json({ success: true, UserData: JSON.stringify(result), token: token, status: 'You are successfully logged in!' });
+            res.json({ success: true, UserData: result, token: token, status: 'You are successfully logged in!' });
+
         } else {
             res.status(500);
             res.send("Error Code: " + err.statusCode);

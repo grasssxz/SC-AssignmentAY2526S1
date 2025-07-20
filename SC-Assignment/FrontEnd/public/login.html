@@ -42,11 +42,36 @@
   <script>
     $(document).ready(function () {
 
-      const token = localStorage.getItem('JWT');
-      const userData = localStorage.getItem("User");
+      // const token = localStorage.getItem('JWT');
+      // localStorage.setItem("User", JSON.stringify(data.UserData)); // ✅ CORRECT
+     
 
-      if (userData != null || token != null) window.location.assign(`http://localhost:3001/index.html`)
-      if (userData != null || token != null) return
+
+      // if (userData != null || token != null) window.location.assign(`http://localhost:3001/index.html`)
+      // if (userData != null || token != null) return
+const token = localStorage.getItem("JWT");
+const userDataRaw = localStorage.getItem("User");
+let userData = null;
+
+try {
+  userData = JSON.parse(userDataRaw);
+  if (typeof userData !== "object" || userData === null || Array.isArray(userData)) {
+    console.warn("Corrupted user data found, clearing localStorage.");
+    localStorage.removeItem("User");
+    localStorage.removeItem("JWT");
+    userData = null;
+  }
+} catch (err) {
+  console.warn("Failed to parse user data, clearing localStorage.");
+  localStorage.removeItem("User");
+  localStorage.removeItem("JWT");
+}
+
+if (userData != null && token != null) {
+  console.log("User is authenticated. Redirecting...");
+  window.location.assign(`http://localhost:3001/index.html`);
+  return;
+}
 
       $("#signin").click(function () {
         let password = $("#password").val();
@@ -55,10 +80,11 @@
         // var data = `{"username": "${username}","password": "${password}"}`
 
         axios.post(`http://localhost:8081/user/login`, data).then(({ data }) => {
+          
           if (data != null) {
             $("#feedback").html("Logged in!").removeClass("text-danger").addClass("text-success")
             localStorage.setItem("JWT", data.token)
-            localStorage.setItem("User", data.UserData);
+               localStorage.setItem("User", JSON.stringify(data.UserData));
             window.location.assign("http://localhost:3001/index.html")
           } else
             $("#feedback").html("Wrong Login Credentials Provided")
