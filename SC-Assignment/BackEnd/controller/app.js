@@ -25,6 +25,7 @@ const discountDB = require('../model/discount');
 const productImagesDB = require('../model/productimages');
 var verifyToken = require('../auth/verifyToken.js');
 const orderDB = require('../model/orders');
+const { validateReviewInput, validateRating } = require('../model/validateReview');
 
 var app = express();
 app.options('*', cors());
@@ -372,20 +373,33 @@ app.delete('/product/:id', verifyToken, (req, res) => {
 
 //Api no. 10 Endpoint: POST /product/:id/review/ | Add review
 app.post('/product/:id/review/', verifyToken, (req, res) => {
+  const { userid, rating, review } = req.body;
 
-    const { userid, rating, review } = req.body;
-    reviewDB.addReview(userid, rating, review, req.params.id, (err, results) => {
+  const ratingResult = validateRating(rating);
+  const reviewResult = validateReviewInput(review);
 
-        if (err)
-            res.status(500).json({ result: "Internal Error" })
+  if (!ratingResult.valid || !reviewResult.valid) {
+    return res.status(400).json({
+      result: "Validation Error",
+      errors: {
+        rating: ratingResult.message,
+        review: reviewResult.message
+      }
+    });
+  }
 
-        //No error, response with reviewid
-        else
-            res.status(201).json({ reviewid: results.insertId })
-
-    })
-
-})
+  // Use sanitized values before storing in DB
+  reviewDB.addReview(
+    userid,
+    ratingResult.sanitized,
+    reviewResult.sanitized,
+    req.params.id,
+    (err, results) => {
+      if (err) return res.status(500).json({ result: "Internal Error" });
+      res.status(201).json({ reviewid: results.insertId });
+    }
+  );
+});
 
 //Api no. 11 Endpoint: GET /product/:id/reviews | Get all review from productid
 app.get('/product/:id/reviews', (req, res) => {

@@ -45,7 +45,7 @@
       let edit = searchParams.get("edit")
       const token = localStorage.getItem('JWT');
 
-     
+
       const productDiv = (dropDownBrand) => {
 
         let divProduct = "";
@@ -681,7 +681,7 @@
                                     ${redstar.repeat(Math.round(rating))}
                                     ${numOfDarkStar < 0 ? "" : darkstar.repeat(numOfDarkStar)}
                                   </ul>
-                                  <h6 class="flex-grow-1 my-1">${review}</h6>
+                                  <h6 class="flex-grow-1 my-1">${escapeHtml(review)}</h6>
                                   <div class="d-grid d-flex justify-content-end">
                                     ${userid === userInfo?.userid ?? -1 ? `<button type="button" class="btn btn-light text-danger justify-content-end" id="Delete" reviewId="${reviewid}">Delete</button>` :
                                 ``}
@@ -733,6 +733,16 @@
 
         })
 
+        function escapeHtml(text) {
+          return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "[quote]")
+            .replace(/'/g, "[tick]")       
+        }
+
+
         $(document).on("click", "#Review", function () {
 
           var userInfo = localStorage.getItem("User")
@@ -750,6 +760,9 @@
 
           userInfo = JSON.parse(userInfo)
           const { userid } = userInfo[0];
+
+          // Escape potentially dangerous HTML
+          review = escapeHtml(review.trim());
 
           var data = { userid, rating, review }
           data = JSON.stringify(data)
@@ -885,9 +898,9 @@
             </li>
 
             <li class="nav-item">
-              <a class="nav-link href="register.html">Register</a>
+              <a class="nav-link href=" register.html">Register</a>
             </li>
-       
+
             <li class="nav-item" id="admin">
               <a class="nav-link" href="admin.html" id="login">Admin</a>
             </li>
