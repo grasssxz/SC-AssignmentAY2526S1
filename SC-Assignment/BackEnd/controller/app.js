@@ -26,7 +26,7 @@ const productImagesDB = require('../model/productimages');
 var verifyToken = require('../auth/verifyToken.js');
 const orderDB = require('../model/orders');
 const { validateReviewInput, validateRating } = require('../model/validateReview');
-
+const sanitizeHtml = require("sanitize-html");
 var app = express();
 app.options('*', cors());
 app.use(cors());
@@ -388,11 +388,12 @@ app.post('/product/:id/review/', verifyToken, (req, res) => {
     });
   }
 
-  // Use sanitized values before storing in DB
+  
   reviewDB.addReview(
     userid,
     ratingResult.sanitized,
-    reviewResult.sanitized,
+    //sends raw input to the DB
+    review.trim(), 
     req.params.id,
     (err, results) => {
       if (err) return res.status(500).json({ result: "Internal Error" });
@@ -403,19 +404,31 @@ app.post('/product/:id/review/', verifyToken, (req, res) => {
 
 //Api no. 11 Endpoint: GET /product/:id/reviews | Get all review from productid
 app.get('/product/:id/reviews', (req, res) => {
+  reviewDB.getProductReview(req.params.id, (err, results) => {
+    if (err) {
+      res.status(500).json({ result: "Internal Error" });
+    } else {
 
-    reviewDB.getProductReview(req.params.id, (err, results) => {
+      // Escape dangerous characters but keep text
+      const escapeHTML = (str) => {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      };
 
-        if (err)
-            res.status(500).json({ result: "Internal Error" })
+      const sanitizedResults = results.map(r => ({
+        ...r,
+        review: escapeHTML(r.review)
+      }));
 
-        //No error, response with all user info
-        else
-            res.status(200).json(results)
-
-    })
-
+      res.status(200).json(sanitizedResults);
+    }
+  });
 });
+
  
 
 //BONUS REQUIREMENT DISCOUNT

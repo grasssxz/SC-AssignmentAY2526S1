@@ -1,17 +1,9 @@
-const sanitizeHtml = require("sanitize-html");
-
 function validateReviewInput(reviewText) {
   if (typeof reviewText !== 'string' || reviewText.trim() === '') {
     return { valid: false, message: "Review cannot be empty." };
   }
 
-  // This removes all tags — critical!
-  const sanitized = sanitizeHtml(reviewText, {
-    allowedTags: [],
-    allowedAttributes: {}
-  });
-
-  return { valid: true, sanitized };
+  return { valid: true, sanitized: reviewText.trim() };
 }
 
 function validateRating(rating) {
