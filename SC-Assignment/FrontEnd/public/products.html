@@ -50,7 +50,9 @@
 
         let divProduct = "";
         axios.get(getProductUrl).then(({ data: productData }) => {
-          axios.get(`http://localhost:8081/discount/`).then(({ data: discountData }) => {
+          axios.get(`http://localhost:8081/discount/`,{
+            headers: { 'authorization': 'Bearer ' + token }
+          }).then(({ data: discountData }) => {
 
             productData.forEach((product) => {
 
@@ -67,7 +69,9 @@
 
               const discount = (product) => {
                 let temp = { isDiscounted: false, discounted: product.price, original: product.price, discount_percentage: 0, ...discount }
+                
                 discountData.forEach((discount) => {
+                  
                   if (product.productid == discount.productid) {
                     let startDate = new Date(discount.start_at)
                     let endDate = new Date(discount.end_at)
@@ -138,7 +142,9 @@
                 let { name, price, description, reviewcount, imagepath, rating, brand, productid, categoryname, categoryid } = product
 
                 axios.get(`http://localhost:8081/product/${productid}/image`).then(({ data: images }) => {
-                  axios.get(`http://localhost:8081/discount/`).then(({ data: discountData }) => {
+                  axios.get(`http://localhost:8081/discount/`,{
+                    headers: { 'authorization': 'Bearer ' + token }
+                  }).then(({ data: discountData }) => {
                     axios.get(`http://localhost:8081/product/${productid}/reviews`).then(({ data: reviewData }) => {
 
                       //Check if param edit is true (Edit product for admin)
@@ -526,6 +532,7 @@
                           let discounts = [];
                           let temp = { isDiscounted: false, discounted: product.price, original: product.price, ...discount, discounts }
                           discountData.forEach((discount) => {
+                          
                             if (product.productid == discount.productid) {
                               discounts.push(discount)
                               let startDate = new Date(discount.start_at)

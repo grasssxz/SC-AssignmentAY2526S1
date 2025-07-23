@@ -27,20 +27,28 @@ const productDB = {
 
       dbConn.query(`
         SELECT 
-          p.productid, p.name, p.description, 
-          c.categoryid, category AS categoryname, 
-          p.brand, p.price, 
-          COUNT(DISTINCT r.reviewid) AS reviewcount, 
-          MAX(pi.path) AS imagepath, 
-          AVG(r.rating) AS rating, 
-          d.discountid, d.discount_percentage
-        FROM product p
-        JOIN category c ON c.categoryid = p.categoryid  
-        LEFT JOIN reviews r ON r.productid = p.productid
-        LEFT JOIN productimages pi ON pi.productid = p.productid 
-        LEFT JOIN discount d ON d.productid = p.productid 
-        WHERE p.productid = ?
-        GROUP BY p.productid, p.name, p.description, c.categoryid, c.category, p.brand, p.price, d.discountid, d.discount_percentage`,
+  p.productid, p.name, p.description, 
+  c.categoryid, c.category AS categoryname, 
+  p.brand, p.price, 
+  COUNT(DISTINCT r.reviewid) AS reviewcount, 
+  MAX(pi.path) AS imagepath, 
+  AVG(r.rating) AS rating,
+  d.discountid, d.discount_percentage
+FROM product p
+JOIN category c ON c.categoryid = p.categoryid  
+LEFT JOIN reviews r ON r.productid = p.productid
+LEFT JOIN productimages pi ON pi.productid = p.productid 
+LEFT JOIN (
+    SELECT d1.*
+    FROM discount d1
+    INNER JOIN (
+        SELECT productid, MAX(discountid) AS max_id
+        FROM discount
+        GROUP BY productid
+    ) d2 ON d1.productid = d2.productid AND d1.discountid = d2.max_id
+) d ON d.productid = p.productid
+WHERE p.productid = ?
+GROUP BY p.productid, p.name, p.description, c.categoryid, c.category, p.brand, p.price, d.discountid, d.discount_percentage`,
         [productid],
         (err, results) => {
           dbConn.end();
