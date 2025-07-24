@@ -25,12 +25,12 @@ const discountDB = require("../model/discount");
 const productImagesDB = require("../model/productimages");
 var verifyToken = require("../auth/verifyToken.js");
 const orderDB = require("../model/orders");
+var verifyAdmin = require("../auth/verifyAdmin.js");
 const {
   validateReviewInput,
   validateRating,
 } = require("../model/validateReview");
 const sanitizeHtml = require("sanitize-html");
-const verifyAdmin = require("../auth/verifyAdmin.js");
 var app = express();
 app.options("*", cors());
 app.use(cors());
@@ -195,9 +195,11 @@ app.post("/users", (req, res) => {
 });
 
 //Api no. 2 Endpoint: GET /users/ | Get all user
-app.get("/users", (req, res) => {
+app.get("/users", verifyToken, (req, res) => {
   userDB.getAllUser((err, results) => {
     if (err) res.status(500).json({ result: "Internal Error" });
+   
+
     //No error, response with all user info
     else {
       res.status(200).json(results);
@@ -206,9 +208,11 @@ app.get("/users", (req, res) => {
 });
 
 //Api no. 3 Endpoint: GET /users/:id/ | Get user by userid
-app.get("/users/:id", (req, res) => {
+app.get("/users/:id", verifyToken, (req, res) => {
   userDB.getUser(req.params.id, (err, results) => {
     if (err) res.status(500).json({ result: "Internal Error" });
+    
+
     //No error, response with user info
     else {
       res.status(200).json(results[0]);
@@ -412,35 +416,20 @@ app.post("/discount/:productid", verifyToken, (req, res) => {
 });
 
 //Api no. 16 Endpoint: GET /discount/ | Get all discount
-app.get("/discount", verifyAdmin, (req, res) => {
-
+app.get("/discount", (req, res) => {
   discountDB.getAllDiscount((err, results) => {
     if (err) res.status(500).json({ result: "Internal Error" });
     else {
-      if (req.type.toLowerCase() != "admin") {
-        results = [];
-      }
       res.status(200).json(results);
-      console.log(results);
     }
   });
 });
 
 //Api no. 17 Endpoint: GET /product/:id/discounts | Get user by userid
-app.get("/discount/:id/", verifyAdmin, (req, res) => {
-  if (req.type.toLowerCase() != "admin") {
-    results = [];
-    res.status(200).json(results);
-  }
+app.get("/discount/:id/", (req, res) => {
   discountDB.getProductDiscount(req.params.id, (err, results) => {
     if (err) res.status(500).json({ result: "Internal Error" });
-    else {
-      if (req.type.toLowerCase() != "admin") {
-        results = [];
-      }
-      res.status(200).json(results);
-      console.log(results);
-    }
+    else res.status(200).json(results);
   });
 });
 

@@ -18,6 +18,11 @@ function verifyAdmin(req, res, next) {
       return res.status(403).json({ auth: false, message: 'Failed to authenticate token' });
     }
 
+      // Check if the decoded type is Admin
+    if (decoded.type !== 'Admin') {
+      return res.status(403).json({ auth: false, message: 'Access denied: Admins only' });
+    }
+
 
     // Store decoded info in request
     req.userid = decoded.userid;

@@ -121,7 +121,11 @@ if (userData != null && token != null) {
         if (username == "" || email == "" || contact == "" || isNaN(contact) || profile_pic_url == "" || password == "" || comfirmpassword == "" || comfirmpassword != password) return false
 
         let data = { username, email, contact, password, profile_pic_url }
-        axios.post(`http://localhost:8081/users`, data).then((data) => {
+        axios.post(`http://localhost:8081/users`, data,{
+          headers: {
+            Authorization: 'Bearer ' + localStorage.getItem('token') // or sessionStorage.getItem if you stored it there
+          }
+        }).then((data) => {
           console.log(data)
           $("#regFeedback").removeClass("text-danger").addClass("text-success")
           $("#regFeedback").html("Success!")
