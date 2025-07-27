@@ -29,7 +29,10 @@ const reviewDB = {
 
   //Retrieves all the reviews of a particular product
   getProductReview: (productid, callback) => {
-
+// Input validation: allow only numeric product IDs
+  if (!/^\d+$/.test(productid)) {
+    return callback(new Error("Invalid product ID"), null);
+  }
     //Connects
     var dbConn = db.getConnection();
     dbConn.connect(function (err) {
@@ -65,37 +68,35 @@ const reviewDB = {
   },
 
   //Delete Review
-  deleteReview: (reviewid, userid, callback) => {
+ deleteReview: (reviewid, userid, callback) => {
 
-    //Connects
-    var dbConn = db.getConnection();
-    dbConn.connect(function (err) {
+  // Connect to DB
+  var dbConn = db.getConnection();
+  dbConn.connect(function (err) {
 
-      //Return error
-      if (err) {
+    // Return connection error
+    if (err) {
+      return callback(err, null);
+      
+    } else {
 
-        return callback(err, null)
+      // Use parameterised query to prevent SQL injection
+      const sql = `DELETE FROM reviews WHERE reviewid = ? AND userid = ?`;
 
-      } else {
+      dbConn.query(sql, [reviewid, userid], function (err, results) {
+        // End connection
+        dbConn.end();
 
-        //Sql query
-        dbConn.query(`delete from reviews where reviewid = ${reviewid} and userid = ${userid};`, [], function (err, results) {
+        if (err) {
+          console.log(err);
+        }
 
-          //End connection
-          dbConn.end();
+        return callback(err, results);
+      });
+    }
+  });
+},
 
-          if (err)
-            console.log(err)
-
-          return callback(err, results)
-        });
-
-      }
-
-    });
-
-
-  },
 
 };
 
