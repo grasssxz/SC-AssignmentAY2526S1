@@ -104,15 +104,23 @@ app.put("/product/:productid", verifyToken, (req, res) => {
 
 //Delete Review
 app.delete("/review/:reviewid", verifyToken, (req, res) => {
-  reviewDB.deleteReview(req.params.reviewid, req.userid, (err, results) => {
-    if (err) res.status(500).json({ result: "Internal Error" });
-    else {
-      if (results.affectedRows < 1)
-        res.status(500).json({ result: "Internal Error" });
-      else res.status(204).end();
+  const reviewId = req.params.reviewid;
+  const userId = req.user.userid; 
+
+  reviewDB.deleteReview(reviewId, userId, (err, results) => {
+    if (err) {
+      
+      return res.status(500).json({ result: "Internal Error" });
     }
+
+    if (results.affectedRows < 1) {
+      return res.status(403).json({ result: "Not authorized or not found" }); // ✅ better error
+    }
+
+    res.status(204).end(); 
   });
 });
+
 
 //get all product by brand
 app.get("/product/brand/:brand", (req, res) => {
@@ -142,6 +150,18 @@ app.post("/user/login", function (req, res) {
   var password = req.body.password;
 
   userDB.loginUser(username, password, function (err, result, token) {
+    if (err) {
+      return res.status(500).send("Error Code: " + err.statusCode || "Login failed");
+    }
+
+    // Check if result is valid
+    if (!result || result.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid username or password",
+      });
+    }
+
     if (!err) {
       res.statusCode = 200;
       res.setHeader("Content-Type", "application/json");
@@ -331,7 +351,8 @@ app.delete("/product/:id", verifyToken, (req, res) => {
 
 //Api no. 10 Endpoint: POST /product/:id/review/ | Add review
 app.post("/product/:id/review/", verifyToken, (req, res) => {
-  const { userid, rating, review } = req.body;
+  const userid = req.user.userid; 
+  const { rating, review } = req.body;
 
   const ratingResult = validateRating(rating);
   const reviewResult = validateReviewInput(review);
